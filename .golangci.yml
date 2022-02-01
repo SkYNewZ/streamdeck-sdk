@@ -1,0 +1,61 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - bodyclose
+    - dupl
+    - errcheck
+    - exportloopref
+    - goconst
+    - godot
+    - godox
+    - goimports
+    - goprintffuncname
+    - gosec
+    - govet
+    - misspell
+    - prealloc
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unconvert
+    - unparam
+    - whitespace
+    - nakedret
+    - cyclop
+    - gosimple
+    - varcheck
+    - unused
+    - deadcode
+    - exportloopref
+    - gocritic
+    - forbidigo
+    - unparam
+    - wastedassign
+    - goerr113
+
+linters-settings:
+  gocritic:
+    disabled-checks:
+      - exitAfterDefer
+
+  gosimple:
+    # Select the Go version to target. The default is '1.13'.
+    go: "1.17"
+    # https://staticcheck.io/docs/options#checks
+    checks: [ "all" ]
+
+  forbidigo:
+    # Forbid the following identifiers (identifiers are written using regexp):
+    forbid:
+      # Logging via Print bypasses our logging framework.
+      - ^(fmt\.Print(|f|ln)|print|println)
+      - ^panic.*$
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
