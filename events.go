@@ -36,3 +36,12 @@ func (s *StreamDeck) SetState(context string, state uint8) {
 		Payload: &SendEventPayload{State: state},
 	}
 }
+
+// SetImage change the image of an action with given context.
+func (s *StreamDeck) SetImage(context string, image string) {
+	s.writeCh <- &SendEvent{
+		Event:   SetImage,
+		Context: context,
+		Payload: &SendEventPayload{Image: image},
+	}
+}
