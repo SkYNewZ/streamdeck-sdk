@@ -166,6 +166,33 @@ const (
 	KeyPad  Controller = "KeyPad"
 )
 
+// Layouts used with StreamDeck.
+const (
+	// IconLayout is a layout that displays an icon on the Stream Deck + touch display.
+	// See [Icon Layout](https://docs.elgato.com/sdk/plugins/layouts-sd+#icon-layout-usdx1)
+	IconLayout = "$X1"
+
+	// CanvasLayout is a layout that displays a canvas on the Stream Deck + touch display.
+	// See [Canvas Layout](https://docs.elgato.com/sdk/plugins/layouts-sd+#canvas-layout-usda0)
+	CanvasLayout = "$A0"
+
+	// ValueLayout is a layout that displays a value on the Stream Deck + touch display.
+	// See [Value Layout](https://docs.elgato.com/sdk/plugins/layouts-sd+#value-layout-usda1)
+	ValueLayout = "$A0"
+
+	// IndicatorLayout is a layout that displays an indicator on the Stream Deck + touch display.
+	// See [Indicator Layout](https://docs.elgato.com/sdk/plugins/layouts-sd+#indicator-layout-usdb1)
+	IndicatorLayout = "$B1"
+
+	// GradientIndicatorLayout is a layout that displays a gradient indicator on the Stream Deck + touch display.
+	// See [Gradient Indicator Layout](https://docs.elgato.com/sdk/plugins/layouts-sd+#gradient-indicator-layout-usdb2)
+	GradientIndicatorLayout = "$B2"
+
+	// DoubleIndicatorLayout is a layout that displays a double indicator on the Stream Deck + touch display.
+	// See [Double Indicator Layout](https://docs.elgato.com/sdk/plugins/layouts-sd+#double-indicator-layout-usdc1)
+	DoubleIndicatorLayout = "$C1"
+)
+
 // ReceivedEvent describes a received event from StreamDeck SDK.
 type ReceivedEvent struct {
 	// The action's unique identifier. If your plugin supports multiple actions,
