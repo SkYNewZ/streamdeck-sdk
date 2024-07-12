@@ -45,3 +45,21 @@ func (s *StreamDeck) SetImage(context string, image string) {
 		Payload: &SendEventPayload{Image: image},
 	}
 }
+
+// SetTriggerDescription change the trigger description of an action with given context.
+func (s *StreamDeck) SetTriggerDescription(context string, payload *SendEventSetTriggerDescriptionPayload) {
+	s.writeCh <- &SendEvent{
+		Event:   SetTriggerDescription,
+		Context: context,
+		Payload: payload,
+	}
+}
+
+// SetFeedback change the feedback of an action with given context.
+func (s *StreamDeck) SetFeedback(context string, payload *SendEventSetFeedbackPayload) {
+	s.writeCh <- &SendEvent{
+		Event:   SetFeedback,
+		Context: context,
+		Payload: payload,
+	}
+}
