@@ -63,3 +63,12 @@ func (s *StreamDeck) SetFeedback(context string, payload *SendEventSetFeedbackPa
 		Payload: payload,
 	}
 }
+
+// SetFeedbackLayout change the feedback layout of an action with given context.
+func (s *StreamDeck) SetFeedbackLayout(context string, layout string) {
+	s.writeCh <- &SendEvent{
+		Event:   SetFeedbackLayout,
+		Context: context,
+		Payload: &SendEventSetFeedbackLayoutPayload{Layout: layout},
+	}
+}

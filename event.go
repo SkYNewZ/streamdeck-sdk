@@ -158,6 +158,14 @@ const (
 	KESDSDKDeviceTypeCorsairGKeys
 )
 
+// Controller used with StreamDeck.
+type Controller string
+
+const (
+	Encoder Controller = "Encoder"
+	KeyPad  Controller = "KeyPad"
+)
+
 // ReceivedEvent describes a received event from StreamDeck SDK.
 type ReceivedEvent struct {
 	// The action's unique identifier. If your plugin supports multiple actions,
@@ -197,9 +205,9 @@ type ReceivedEventPayload struct {
 	// This json object contains data that you can set and is stored persistently.
 	Settings map[string]interface{} `json:"settings"`
 
-	// Contain value: 'Encoder'.
+	// Contain value: 'Encoder' or 'KeyPad'.
 	// Used on events: touchTap, dialDown, dialUp, dialRotate
-	Controller string `json:"controller"`
+	Controller Controller `json:"controller"`
 
 	// The coordinates of the action triggered.
 	Coordinates struct {
