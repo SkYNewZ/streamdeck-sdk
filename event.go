@@ -304,10 +304,6 @@ const (
 	Software
 )
 
-type Payload interface {
-	// Define common methods for all payloads here, if any.
-}
-
 // SendEvent describes a event to send to StreamDeck SDK.
 type SendEvent struct {
 	// The action unique identifier.
@@ -327,7 +323,7 @@ type SendEvent struct {
 	Device string `json:"device,omitempty"`
 
 	// A json object
-	Payload Payload `json:"payload,omitempty"`
+	Payload interface{} `json:"payload,omitempty"`
 }
 
 // SendEventPayload describes a payload to send to StreamDeck SDK.
