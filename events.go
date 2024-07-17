@@ -72,3 +72,33 @@ func (s *StreamDeck) SetFeedbackLayout(context string, layout string) {
 		Payload: &SendEventSetFeedbackLayoutPayload{Layout: layout},
 	}
 }
+
+// SetSettings change the settings of an action with given context.
+func (s *StreamDeck) SetSettings(context string, settings map[string]interface{}) {
+	s.writeCh <- &SendEvent{
+		Event:   SetSettings,
+		Context: context,
+		Payload: &settings,
+	}
+}
+
+// GetSettings get the settings of an action with given context.
+// Settings will be sent back to the plugin as a ReceivedEvent with the event name DidReceiveSettings.
+func (s *StreamDeck) GetSettings(context string) {
+	s.writeCh <- &SendEvent{Event: GetSettings, Context: context}
+}
+
+// SetGlobalSettings change the global settings of an action with given context.
+func (s *StreamDeck) SetGlobalSettings(context string, settings map[string]interface{}) {
+	s.writeCh <- &SendEvent{
+		Event:   SetGlobalSettings,
+		Context: context,
+		Payload: &settings,
+	}
+}
+
+// GetGlobalSettings get the global settings of an action with given context.
+// Global settings will be sent back to the plugin as a ReceivedEvent with the event name DidReceiveGlobalSettings.
+func (s *StreamDeck) GetGlobalSettings(context string) {
+	s.writeCh <- &SendEvent{Event: GetGlobalSettings, Context: context}
+}
