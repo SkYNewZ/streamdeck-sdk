@@ -111,3 +111,15 @@ func (s *StreamDeck) SetGlobalSettings(context string, settings map[string]inter
 func (s *StreamDeck) GetGlobalSettings(context string) {
 	s.writeCh <- &SendEvent{Event: GetGlobalSettings, Context: context}
 }
+
+// SwitchProfile switches to a pre-defined profile distributed with the plugin on the specified device.
+// The payload should contain "profile" (string) and optionally "page" (int, 0-indexed).
+// When profile is omitted, Stream Deck switches back to the previous profile.
+func (s *StreamDeck) SwitchProfile(context, device string, payload map[string]interface{}) {
+	s.writeCh <- &SendEvent{
+		Event:   SwitchToProfile,
+		Context: context,
+		Device:  device,
+		Payload: payload,
+	}
+}
