@@ -27,7 +27,8 @@ type StreamDeck struct {
 	// handlers will process incoming events
 	handlers []HandlerFunc
 
-	debug bool
+	debug   bool
+	onError func(error)
 }
 
 var (
@@ -118,7 +119,9 @@ func (s *StreamDeck) Start() {
 func (s *StreamDeck) reader(ctx context.Context) {
 	defer func() {
 		close(s.readCh)
-		_ = s.conn.Close()
+		if err := s.conn.Close(); err != nil {
+			s.reportError(fmt.Errorf("close connection: %w", err))
+		}
 	}()
 
 	if s.debug {
@@ -133,11 +136,11 @@ func (s *StreamDeck) reader(ctx context.Context) {
 			var event ReceivedEvent
 			if err := s.conn.ReadJSON(&event); err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					s.Logf("[ERROR] unexpected close connection: %v", err)
+					s.reportError(fmt.Errorf("unexpected close connection: %w", err))
 					return
 				}
 
-				s.Logf("[ERROR] read message: %v", err)
+				s.reportError(fmt.Errorf("read message: %w", err))
 				return
 			}
 
@@ -160,7 +163,7 @@ func (s *StreamDeck) writer(ctx context.Context) {
 			return
 		case event := <-s.writeCh:
 			if err := s.conn.WriteJSON(event); err != nil {
-				s.Logf("[ERROR] write event [%s] for action [%s]: %v", event.Event, event.Action, err)
+				s.reportError(fmt.Errorf("write event [%s] for action [%s]: %w", event.Event, event.Action, err))
 				return
 			}
 		}
@@ -187,11 +190,19 @@ func (s *StreamDeck) process(ctx context.Context) {
 
 				for _, h := range s.handlers {
 					if err := h(event); err != nil {
-						s.Logf("[ERROR] event [%s] action [%s]: %v", event.Event, event.Action, err)
+						s.reportError(fmt.Errorf("event [%s] action [%s]: %w", event.Event, event.Action, err))
 						s.Alert(event.Context)
 					}
 				}
 			}(e)
 		}
 	}
+}
+
+func (s *StreamDeck) reportError(err error) {
+	if s.onError != nil {
+		s.onError(err)
+		return
+	}
+	s.Logf("[ERROR] %v", err)
 }
