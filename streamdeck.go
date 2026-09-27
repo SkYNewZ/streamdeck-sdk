@@ -187,25 +187,23 @@ func (s *StreamDeck) process(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case e, ok := <-s.readCh:
+		case event, ok := <-s.readCh:
 			if !ok {
 				// The channel is closed
 				return
 			}
 
 			// Send event to all to registered handlers
-			go func(event *ReceivedEvent) {
-				if s.debug {
-					s.Logf("[DEBUG] received event [%s] for action [%s]", event.Event, event.Action)
-				}
+			if s.debug {
+				s.Logf("[DEBUG] received event [%s] for action [%s]", event.Event, event.Action)
+			}
 
-				for _, h := range s.handlers {
-					if err := h(event); err != nil {
-						s.reportError(fmt.Errorf("event [%s] action [%s]: %w", event.Event, event.Action, err))
-						s.Alert(event.Context)
-					}
+			for _, h := range s.handlers {
+				if err := h(event); err != nil {
+					s.reportError(fmt.Errorf("event [%s] action [%s]: %w", event.Event, event.Action, err))
+					s.Alert(event.Context)
 				}
-			}(e)
+			}
 		}
 	}
 }
