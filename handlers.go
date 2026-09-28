@@ -1,6 +1,7 @@
 package sdk
 
 // HandlerFunc receive event from StreamDeck SDK.
+// Handlers run sequentially, in the order events arrive.
 type HandlerFunc func(event *ReceivedEvent) error
 
 // Handler same as HandlerFunc but with interface.
