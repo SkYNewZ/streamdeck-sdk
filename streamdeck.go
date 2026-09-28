@@ -23,6 +23,7 @@ type StreamDeck struct {
 	conn    *websocket.Conn
 	readCh  chan *ReceivedEvent
 	writeCh chan *SendEvent
+	done    chan struct{}
 
 	// handlers will process incoming events
 	handlers []HandlerFunc
@@ -89,6 +90,7 @@ func New(opts ...Option) (*StreamDeck, error) {
 		conn:     conn,
 		readCh:   make(chan *ReceivedEvent),
 		writeCh:  make(chan *SendEvent),
+		done:     make(chan struct{}),
 		handlers: make([]HandlerFunc, 0),
 		debug:    false,
 	}
@@ -151,7 +153,13 @@ func (s *StreamDeck) reader(ctx context.Context) {
 
 // writer listen on write channel and send messages.
 func (s *StreamDeck) writer(ctx context.Context) {
-	defer close(s.writeCh)
+	var writeErr error
+	defer func() {
+		close(s.done)
+		if writeErr != nil {
+			s.reportError(writeErr)
+		}
+	}()
 
 	if s.debug {
 		s.Log("[DEBUG] writer started")
@@ -163,7 +171,7 @@ func (s *StreamDeck) writer(ctx context.Context) {
 			return
 		case event := <-s.writeCh:
 			if err := s.conn.WriteJSON(event); err != nil {
-				s.reportError(fmt.Errorf("write event [%s] for action [%s]: %w", event.Event, event.Action, err))
+				writeErr = fmt.Errorf("write event [%s] for action [%s]: %w", event.Event, event.Action, err)
 				return
 			}
 		}
@@ -205,4 +213,12 @@ func (s *StreamDeck) reportError(err error) {
 		return
 	}
 	s.Logf("[ERROR] %v", err)
+}
+
+// send queues event for the writer and drops it once the writer has stopped.
+func (s *StreamDeck) send(event *SendEvent) {
+	select {
+	case s.writeCh <- event:
+	case <-s.done:
+	}
 }
