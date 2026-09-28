@@ -23,11 +23,13 @@ type StreamDeck struct {
 	conn    *websocket.Conn
 	readCh  chan *ReceivedEvent
 	writeCh chan *SendEvent
+	done    chan struct{}
 
 	// handlers will process incoming events
 	handlers []HandlerFunc
 
-	debug bool
+	debug   bool
+	onError func(error)
 }
 
 var (
@@ -88,6 +90,7 @@ func New(opts ...Option) (*StreamDeck, error) {
 		conn:     conn,
 		readCh:   make(chan *ReceivedEvent),
 		writeCh:  make(chan *SendEvent),
+		done:     make(chan struct{}),
 		handlers: make([]HandlerFunc, 0),
 		debug:    false,
 	}
@@ -118,7 +121,9 @@ func (s *StreamDeck) Start() {
 func (s *StreamDeck) reader(ctx context.Context) {
 	defer func() {
 		close(s.readCh)
-		_ = s.conn.Close()
+		if err := s.conn.Close(); err != nil {
+			s.reportError(fmt.Errorf("close connection: %w", err))
+		}
 	}()
 
 	if s.debug {
@@ -136,11 +141,11 @@ func (s *StreamDeck) reader(ctx context.Context) {
 					return
 				}
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					s.Logf("[ERROR] unexpected close connection: %v", err)
+					s.reportError(fmt.Errorf("unexpected close connection: %w", err))
 					return
 				}
 
-				s.Logf("[ERROR] read message: %v", err)
+				s.reportError(fmt.Errorf("read message: %w", err))
 				return
 			}
 
@@ -151,7 +156,13 @@ func (s *StreamDeck) reader(ctx context.Context) {
 
 // writer listen on write channel and send messages.
 func (s *StreamDeck) writer(ctx context.Context) {
-	defer close(s.writeCh)
+	var writeErr error
+	defer func() {
+		close(s.done)
+		if writeErr != nil {
+			s.reportError(writeErr)
+		}
+	}()
 
 	if s.debug {
 		s.Log("[DEBUG] writer started")
@@ -163,7 +174,7 @@ func (s *StreamDeck) writer(ctx context.Context) {
 			return
 		case event := <-s.writeCh:
 			if err := s.conn.WriteJSON(event); err != nil {
-				s.Logf("[ERROR] write event [%s] for action [%s]: %v", event.Event, event.Action, err)
+				writeErr = fmt.Errorf("write event [%s] for action [%s]: %w", event.Event, event.Action, err)
 				return
 			}
 		}
@@ -190,11 +201,27 @@ func (s *StreamDeck) process(ctx context.Context) {
 
 				for _, h := range s.handlers {
 					if err := h(event); err != nil {
-						s.Logf("[ERROR] event [%s] action [%s]: %v", event.Event, event.Action, err)
+						s.reportError(fmt.Errorf("event [%s] action [%s]: %w", event.Event, event.Action, err))
 						s.Alert(event.Context)
 					}
 				}
 			}(e)
 		}
+	}
+}
+
+func (s *StreamDeck) reportError(err error) {
+	if s.onError != nil {
+		s.onError(err)
+		return
+	}
+	s.Logf("[ERROR] %v", err)
+}
+
+// send queues event for the writer and drops it once the writer has stopped.
+func (s *StreamDeck) send(event *SendEvent) {
+	select {
+	case s.writeCh <- event:
+	case <-s.done:
 	}
 }

@@ -9,3 +9,11 @@ func WithDebug(debug bool) Option {
 		deck.debug = debug
 	}
 }
+
+// WithErrorHandler receives errors instead of the Stream Deck log, which is
+// unreachable once the connection is lost. It may be called concurrently.
+func WithErrorHandler(h func(error)) Option {
+	return func(deck *StreamDeck) {
+		deck.onError = h
+	}
+}
